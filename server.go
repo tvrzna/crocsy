@@ -3,15 +3,43 @@ package main
 import (
 	"crypto/tls"
 	"log"
+	"net"
 	"net/http"
 	"net/http/httputil"
 	"net/url"
 	"strings"
 )
 
+const (
+	varHost       = "$host"
+	varPort       = "$port"
+	varRequestUri = "$request_uri"
+)
+
 func startServer(s *Server) {
 	// TODO: validate listen
 	mux := http.NewServeMux()
+
+	if s.Redirect != "" {
+		handleRedirect(s, mux)
+	} else {
+		proxyRoutes(s, mux)
+	}
+
+	server := &http.Server{
+		Addr:    s.Listen,
+		Handler: mux,
+	}
+
+	if s.TLS.CertFile != "" && s.TLS.KeyFile != "" {
+		server.TLSConfig = &tls.Config{MinVersion: tls.VersionTLS12}
+		go server.ListenAndServeTLS(s.TLS.CertFile, s.TLS.KeyFile)
+	} else {
+		go server.ListenAndServe()
+	}
+}
+
+func proxyRoutes(s *Server, mux *http.ServeMux) {
 	for _, route := range s.Routes {
 		r := route
 		targetURL, err := url.Parse(r.Target)
@@ -35,16 +63,25 @@ func startServer(s *Server) {
 		mux.Handle(r.Path+"/", proxy)
 		mux.Handle(r.Path, proxy)
 	}
+}
 
-	server := &http.Server{
-		Addr:    s.Listen,
-		Handler: mux,
-	}
+func handleRedirect(s *Server, mux *http.ServeMux) {
+	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		host := r.Host
+		hostname := host
+		port := "80"
+		if h, p, err := net.SplitHostPort(host); err == nil {
+			hostname = h
+			port = p
+		}
 
-	if s.TLS.CertFile != "" && s.TLS.KeyFile != "" {
-		server.TLSConfig = &tls.Config{MinVersion: tls.VersionTLS12}
-		go server.ListenAndServeTLS(s.TLS.CertFile, s.TLS.KeyFile)
-	} else {
-		go server.ListenAndServe()
-	}
+		replacer := strings.NewReplacer(
+			varHost, hostname,
+			varPort, port,
+			varRequestUri, r.URL.RequestURI(),
+		)
+
+		target := replacer.Replace(s.Redirect)
+		http.Redirect(w, r, target, http.StatusMovedPermanently)
+	})
 }

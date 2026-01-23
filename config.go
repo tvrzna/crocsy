@@ -18,7 +18,8 @@ type Server struct {
 		CertFile string `yaml:"cert_file"`
 		KeyFile  string `yaml:"key_file"`
 	} `yaml:"tls"`
-	Routes []Route `yaml:"route"`
+	Routes   []Route `yaml:"route"`
+	Redirect string  `yaml:"redirect"`
 }
 
 type Route struct {
