@@ -32,22 +32,17 @@ crocsy reads its configuration from a YAML file. Example:
 ```yaml
 server:
   - listen: ":80"
-    route:
-      - path: "/api"
-        target: "http://localhost:8080/"
-
-      - path: "/api2"
-        target: "http://localhost:8081/"
+    redirect: "https://$host$request_uri"
 
   - listen: ":443"
     tls:
       cert_file: "/etc/ssl/crocsy.crt"
       key_file: "/etc/ssl/crocsy.key"
     route:
-      - path: "/api"
+      - path: "/api/"
         target: "http://localhost:8080/"
 
-      - path: "/api2"
+      - path: "/api2/"
         target: "http://localhost:8081/"
 ```
 

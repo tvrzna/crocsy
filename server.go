@@ -60,7 +60,6 @@ func proxyRoutes(s *Server, mux *http.ServeMux) {
 			}
 		}
 
-		mux.Handle(r.Path+"/", proxy)
 		mux.Handle(r.Path, proxy)
 	}
 }

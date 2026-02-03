@@ -12,6 +12,8 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+
+	log.Print("-- starting crocsy")
 	for _, server := range conf.Servers {
 		startServer(&server)
 	}
