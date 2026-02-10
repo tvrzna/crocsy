@@ -41,6 +41,8 @@ server:
     route:
       - path: "/api/"
         target: "http://localhost:8080/"
+        set-headers:
+          Content-Security-Policy: "default-src 'self'; script-src 'none'; style-src 'none'; font-src 'self'; connect-src 'self' https: data:; img-src 'self';"
 
       - path: "/api2/"
         target: "http://localhost:8081/"

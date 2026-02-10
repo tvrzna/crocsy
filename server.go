@@ -60,6 +60,13 @@ func proxyRoutes(s *Server, mux *http.ServeMux) {
 			}
 		}
 
+		proxy.ModifyResponse = func(res *http.Response) error {
+			for headerName, headerValue := range r.SetHeaders {
+				res.Header.Set(headerName, headerValue)
+			}
+			return nil
+		}
+
 		mux.Handle(r.Path, proxy)
 	}
 }
