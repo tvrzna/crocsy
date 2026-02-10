@@ -38,6 +38,10 @@ server:
     tls:
       cert_file: "/etc/ssl/crocsy.crt"
       key_file: "/etc/ssl/crocsy.key"
+    set-headers:
+      Referrer-Policy: "origin"
+      X-Content-Type-Options: "nosniff"
+      Strict-Transport-Security: "max-age=31536000; includeSubDomains"
     route:
       - path: "/api/"
         target: "http://localhost:8080/"

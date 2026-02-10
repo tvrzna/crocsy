@@ -18,8 +18,9 @@ type Server struct {
 		CertFile string `yaml:"cert_file"`
 		KeyFile  string `yaml:"key_file"`
 	} `yaml:"tls"`
-	Routes   []Route `yaml:"route"`
-	Redirect string  `yaml:"redirect"`
+	Routes     []Route           `yaml:"route"`
+	Redirect   string            `yaml:"redirect"`
+	SetHeaders map[string]string `yaml:"set-headers"`
 }
 
 type Route struct {

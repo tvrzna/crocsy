@@ -61,6 +61,9 @@ func proxyRoutes(s *Server, mux *http.ServeMux) {
 		}
 
 		proxy.ModifyResponse = func(res *http.Response) error {
+			for headerName, headerValue := range s.SetHeaders {
+				res.Header.Set(headerName, headerValue)
+			}
 			for headerName, headerValue := range r.SetHeaders {
 				res.Header.Set(headerName, headerValue)
 			}
@@ -88,6 +91,11 @@ func handleRedirect(s *Server, mux *http.ServeMux) {
 		)
 
 		target := replacer.Replace(s.Redirect)
+
+		for headerName, headerValue := range s.SetHeaders {
+			w.Header().Set(headerName, headerValue)
+		}
+
 		http.Redirect(w, r, target, http.StatusMovedPermanently)
 	})
 }
