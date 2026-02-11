@@ -60,17 +60,11 @@ func proxyRoutes(s *Server, mux *http.ServeMux) {
 			if req.URL.Path == "" || !strings.HasPrefix(req.URL.Path, "/") {
 				req.URL.Path = "/" + req.URL.Path
 			}
-
 		}
 
 		proxy.ModifyResponse = func(res *http.Response) error {
 			replacer, _ := (res.Request.Context().Value(ctxReplacerKey).(*VariableReplacer))
-			for headerName, headerValue := range s.SetHeaders {
-				res.Header.Set(headerName, replacer.Replace(headerValue))
-			}
-			for headerName, headerValue := range r.SetHeaders {
-				res.Header.Set(headerName, replacer.Replace(headerValue))
-			}
+			setHeaders(res.Header, replacer, s.SetHeaders, r.SetHeaders)
 			return nil
 		}
 
@@ -81,9 +75,19 @@ func proxyRoutes(s *Server, mux *http.ServeMux) {
 func handleRedirect(s *Server, mux *http.ServeMux) {
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		replacer := newVariableReplacer(r)
-		for headerName, headerValue := range s.SetHeaders {
-			w.Header().Set(headerName, replacer.Replace(headerValue))
-		}
+		setHeaders(w.Header(), replacer, s.SetHeaders)
 		http.Redirect(w, r, replacer.Replace(s.Redirect), http.StatusMovedPermanently)
 	})
+}
+
+func setHeaders(header http.Header, replacer *VariableReplacer, setHeaders ...map[string]string) {
+	for _, setHeader := range setHeaders {
+		for headerName, headerValue := range setHeader {
+			if replacer != nil {
+				header.Set(headerName, replacer.Replace(headerValue))
+			} else {
+				header.Set(headerName, headerValue)
+			}
+		}
+	}
 }
