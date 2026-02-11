@@ -1,9 +1,9 @@
 package main
 
 import (
+	"context"
 	"crypto/tls"
 	"log"
-	"net"
 	"net/http"
 	"net/http/httputil"
 	"net/url"
@@ -11,9 +11,7 @@ import (
 )
 
 const (
-	varHost       = "$host"
-	varPort       = "$port"
-	varRequestUri = "$request_uri"
+	ctxReplacerKey = "replacer"
 )
 
 func startServer(s *Server) {
@@ -53,19 +51,25 @@ func proxyRoutes(s *Server, mux *http.ServeMux) {
 
 		proxy.Director = func(req *http.Request) {
 			originalDirector(req)
+
+			ctx := context.WithValue(req.Context(), ctxReplacerKey, newVariableReplacer(req))
+			*req = *req.WithContext(ctx)
+
 			req.Host = targetURL.Host
 			req.URL.Path = strings.TrimPrefix(req.URL.Path, r.Path)
 			if req.URL.Path == "" || !strings.HasPrefix(req.URL.Path, "/") {
 				req.URL.Path = "/" + req.URL.Path
 			}
+
 		}
 
 		proxy.ModifyResponse = func(res *http.Response) error {
+			replacer, _ := (res.Request.Context().Value(ctxReplacerKey).(*VariableReplacer))
 			for headerName, headerValue := range s.SetHeaders {
-				res.Header.Set(headerName, headerValue)
+				res.Header.Set(headerName, replacer.Replace(headerValue))
 			}
 			for headerName, headerValue := range r.SetHeaders {
-				res.Header.Set(headerName, headerValue)
+				res.Header.Set(headerName, replacer.Replace(headerValue))
 			}
 			return nil
 		}
@@ -76,26 +80,10 @@ func proxyRoutes(s *Server, mux *http.ServeMux) {
 
 func handleRedirect(s *Server, mux *http.ServeMux) {
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		host := r.Host
-		hostname := host
-		port := "80"
-		if h, p, err := net.SplitHostPort(host); err == nil {
-			hostname = h
-			port = p
-		}
-
-		replacer := strings.NewReplacer(
-			varHost, hostname,
-			varPort, port,
-			varRequestUri, r.URL.RequestURI(),
-		)
-
-		target := replacer.Replace(s.Redirect)
-
+		replacer := newVariableReplacer(r)
 		for headerName, headerValue := range s.SetHeaders {
-			w.Header().Set(headerName, headerValue)
+			w.Header().Set(headerName, replacer.Replace(headerValue))
 		}
-
-		http.Redirect(w, r, target, http.StatusMovedPermanently)
+		http.Redirect(w, r, replacer.Replace(s.Redirect), http.StatusMovedPermanently)
 	})
 }
