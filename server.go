@@ -55,6 +55,8 @@ func proxyRoutes(s *Server, mux *http.ServeMux) {
 			ctx := context.WithValue(in.Context(), ctxReplacerKey, replacer)
 			*out = *out.WithContext(ctx)
 
+			setHeaders(out.Header, replacer, r.ProxySetHeaders)
+
 			out.URL.Scheme = targetURL.Scheme
 			out.URL.Host = targetURL.Host
 			out.Host = targetURL.Host

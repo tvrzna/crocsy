@@ -24,9 +24,10 @@ type Server struct {
 }
 
 type Route struct {
-	Path       string            `yaml:"path"`
-	Target     string            `yaml:"target"`
-	SetHeaders map[string]string `yaml:"set-headers"`
+	Path            string            `yaml:"path"`
+	Target          string            `yaml:"target"`
+	SetHeaders      map[string]string `yaml:"set-headers"`
+	ProxySetHeaders map[string]string `yaml:"proxy-set-headers"`
 }
 
 var buildVersion string

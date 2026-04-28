@@ -50,5 +50,7 @@ server:
 
       - path: "/api2/"
         target: "http://localhost:8081/"
+        proxy-set-headers:
+          X-Forwarded-Host: $host
 ```
 
