@@ -46,19 +46,22 @@ func proxyRoutes(s *Server, mux *http.ServeMux) {
 			continue
 		}
 
-		proxy := httputil.NewSingleHostReverseProxy(targetURL)
-		originalDirector := proxy.Director
+		proxy := &httputil.ReverseProxy{}
+		proxy.Rewrite = func(pr *httputil.ProxyRequest) {
+			in := pr.In
+			out := pr.Out
 
-		proxy.Director = func(req *http.Request) {
-			originalDirector(req)
+			replacer := newVariableReplacer(in)
+			ctx := context.WithValue(in.Context(), ctxReplacerKey, replacer)
+			*out = *out.WithContext(ctx)
 
-			ctx := context.WithValue(req.Context(), ctxReplacerKey, newVariableReplacer(req))
-			*req = *req.WithContext(ctx)
+			out.URL.Scheme = targetURL.Scheme
+			out.URL.Host = targetURL.Host
+			out.Host = targetURL.Host
 
-			req.Host = targetURL.Host
-			req.URL.Path = strings.TrimPrefix(req.URL.Path, r.Path)
-			if req.URL.Path == "" || !strings.HasPrefix(req.URL.Path, "/") {
-				req.URL.Path = "/" + req.URL.Path
+			out.URL.Path = strings.TrimPrefix(in.URL.Path, r.Path)
+			if out.URL.Path == "" || !strings.HasPrefix(out.URL.Path, "/") {
+				out.URL.Path = "/" + out.URL.Path
 			}
 		}
 
