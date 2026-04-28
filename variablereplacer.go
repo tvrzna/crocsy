@@ -9,6 +9,7 @@ import (
 const (
 	varHost       = "$host"
 	varPort       = "$port"
+	varScheme     = "$scheme"
 	varRequestUri = "$request_uri"
 )
 
@@ -25,10 +26,16 @@ func newVariableReplacer(r *http.Request) *VariableReplacer {
 		port = p
 	}
 
+	scheme := "http"
+	if r.TLS != nil {
+		scheme = "https"
+	}
+
 	replacer := &VariableReplacer{strings.NewReplacer(
 		varHost, hostname,
 		varPort, port,
 		varRequestUri, r.URL.RequestURI(),
+		varScheme, scheme,
 	)}
 
 	return replacer

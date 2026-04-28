@@ -52,5 +52,6 @@ server:
         target: "http://localhost:8081/"
         proxy-set-headers:
           X-Forwarded-Host: $host
+          X-Forwarded-Proto: $scheme
 ```
 
