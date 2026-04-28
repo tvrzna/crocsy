@@ -24,6 +24,7 @@ type Server struct {
 }
 
 type Route struct {
+	Host            string            `yaml:"host"`
 	Path            string            `yaml:"path"`
 	Target          string            `yaml:"target"`
 	SetHeaders      map[string]string `yaml:"set-headers"`

@@ -1,18 +1,21 @@
 package main
 
 import (
-	"context"
 	"crypto/tls"
 	"log"
 	"net/http"
 	"net/http/httputil"
 	"net/url"
-	"strings"
 )
 
 const (
 	ctxReplacerKey = "replacer"
 )
+
+type compiledRoute struct {
+	Route
+	proxy *httputil.ReverseProxy
+}
 
 func startServer(s *Server) {
 	// TODO: validate listen
@@ -38,6 +41,7 @@ func startServer(s *Server) {
 }
 
 func proxyRoutes(s *Server, mux *http.ServeMux) {
+	var compiledRoutes []*proxyRouter
 	for _, route := range s.Routes {
 		r := route
 		targetURL, err := url.Parse(r.Target)
@@ -46,35 +50,11 @@ func proxyRoutes(s *Server, mux *http.ServeMux) {
 			continue
 		}
 
-		proxy := &httputil.ReverseProxy{}
-		proxy.Rewrite = func(pr *httputil.ProxyRequest) {
-			in := pr.In
-			out := pr.Out
-
-			replacer := newVariableReplacer(in)
-			ctx := context.WithValue(in.Context(), ctxReplacerKey, replacer)
-			*out = *out.WithContext(ctx)
-
-			setHeaders(out.Header, replacer, r.ProxySetHeaders)
-
-			out.URL.Scheme = targetURL.Scheme
-			out.URL.Host = targetURL.Host
-			out.Host = targetURL.Host
-
-			out.URL.Path = strings.TrimPrefix(in.URL.Path, r.Path)
-			if out.URL.Path == "" || !strings.HasPrefix(out.URL.Path, "/") {
-				out.URL.Path = "/" + out.URL.Path
-			}
-		}
-
-		proxy.ModifyResponse = func(res *http.Response) error {
-			replacer, _ := (res.Request.Context().Value(ctxReplacerKey).(*VariableReplacer))
-			setHeaders(res.Header, replacer, s.SetHeaders, r.SetHeaders)
-			return nil
-		}
-
-		mux.Handle(r.Path, proxy)
+		compiledRoutes = append(compiledRoutes, initProxyRouter(s, &route, targetURL))
 	}
+	sortCompiledRoutes(compiledRoutes)
+
+	mux.HandleFunc("/", handleProxyRoutes(compiledRoutes))
 }
 
 func handleRedirect(s *Server, mux *http.ServeMux) {

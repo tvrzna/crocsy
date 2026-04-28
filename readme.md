@@ -43,7 +43,11 @@ server:
       X-Content-Type-Options: "nosniff"
       Strict-Transport-Security: "max-age=31536000; includeSubDomains"
     route:
-      - path: "/api/"
+      - path: "/"
+        target: "http://localhost:3333"
+
+      - host: "api.domain.com"
+        path: "/"
         target: "http://localhost:8080/"
         set-headers:
           Content-Security-Policy: "default-src 'self'; script-src 'none'; style-src 'none'; font-src 'self'; connect-src 'self' https: data:; img-src 'self';"
