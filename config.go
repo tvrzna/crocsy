@@ -40,7 +40,7 @@ func InitConfig(arg []string) (*Config, error) {
 		case "-h", "--help":
 			printHelp()
 		case "-v", "--version":
-			fmt.Printf("lerry %s\nhttps://github.com/tvrzna/crocsy\n\nReleased under the MIT License.\n", getVersion())
+			fmt.Printf("crocsy %s\nhttps://github.com/tvrzna/crocsy\n\nReleased under the MIT License.\n", getVersion())
 			os.Exit(0)
 		case "-c", "--config":
 			configPath = value
