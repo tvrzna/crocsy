@@ -61,7 +61,7 @@ func handleRedirect(s *Server, mux *http.ServeMux) {
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		replacer := newVariableReplacer(r)
 		setHeaders(w.Header(), replacer, s.SetHeaders)
-		http.Redirect(w, r, replacer.Replace(s.Redirect), http.StatusMovedPermanently)
+		http.Redirect(w, r, replacer.Resolve(s.Redirect), http.StatusMovedPermanently)
 	})
 }
 
@@ -69,7 +69,7 @@ func setHeaders(header http.Header, replacer *VariableReplacer, setHeaders ...ma
 	for _, setHeader := range setHeaders {
 		for headerName, headerValue := range setHeader {
 			if replacer != nil {
-				header.Set(headerName, replacer.Replace(headerValue))
+				header.Set(headerName, replacer.Resolve(headerValue))
 			} else {
 				header.Set(headerName, headerValue)
 			}

@@ -57,5 +57,6 @@ server:
         proxy-set-headers:
           X-Forwarded-Host: $host
           X-Forwarded-Proto: $scheme
+          Custom-Header: $header.custom-header
 ```
 
