@@ -4,18 +4,12 @@ import (
 	"crypto/tls"
 	"log"
 	"net/http"
-	"net/http/httputil"
 	"net/url"
 )
 
 const (
 	ctxReplacerKey = "replacer"
 )
-
-type compiledRoute struct {
-	Route
-	proxy *httputil.ReverseProxy
-}
 
 func startServer(s *Server) {
 	// TODO: validate listen
