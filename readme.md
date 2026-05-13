@@ -46,6 +46,11 @@ server:
       - path: "/"
         target: "http://localhost:3333"
 
+      - path: "/static"
+        root: "/srv/www/html"
+        autoindex: true
+        index: "index.html index.htm"
+
       - host: "api.domain.com"
         path: "/"
         target: "http://localhost:8080/"

@@ -27,7 +27,9 @@ type Route struct {
 	Host            string            `yaml:"host"`
 	Path            string            `yaml:"path"`
 	Target          string            `yaml:"target"`
-	Root            string            `yaml:"root"` // TODO: implement autoindex and index
+	Root            string            `yaml:"root"`
+	Autoindex       bool              `yaml:"autoindex"`
+	Index           string            `yaml:"index"`
 	SetHeaders      map[string]string `yaml:"set-headers"`
 	ProxySetHeaders map[string]string `yaml:"proxy-set-headers"`
 }

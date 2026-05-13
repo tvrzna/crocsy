@@ -5,7 +5,6 @@ import (
 	"net/http"
 	"net/http/httputil"
 	"net/url"
-	"os"
 	"strings"
 )
 
@@ -14,7 +13,7 @@ type proxyRouter struct {
 	server       *Server
 	route        *Route
 	reverseProxy *httputil.ReverseProxy
-	fileHandler  http.Handler
+	fileServer   *FileServer
 }
 
 func initProxyRouter(s *Server, r *Route, targetURL *url.URL) *proxyRouter {
@@ -25,8 +24,7 @@ func initProxyRouter(s *Server, r *Route, targetURL *url.URL) *proxyRouter {
 		proxyRouter.reverseProxy.Rewrite = rewriteFce(proxyRouter)
 		proxyRouter.reverseProxy.ModifyResponse = modifyResponseFce(proxyRouter)
 	} else if r.Root != "" {
-		// TODO: do not standard http.FileServer
-		proxyRouter.fileHandler = http.StripPrefix(r.Path, http.FileServer(http.FS(os.DirFS(r.Root))))
+		proxyRouter.fileServer = newFileServer(r)
 	}
 
 	return proxyRouter
