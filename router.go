@@ -23,7 +23,12 @@ func handleProxyRoutes(compiledRoutes []*proxyRouter) func(w http.ResponseWriter
 				continue
 			}
 
-			r.ServeHTTP(w, req)
+			if r.reverseProxy != nil {
+				r.reverseProxy.ServeHTTP(w, req)
+			} else if r.fileHandler != nil {
+				r.fileHandler.ServeHTTP(w, req)
+			}
+
 			return
 		}
 

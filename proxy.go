@@ -5,21 +5,29 @@ import (
 	"net/http"
 	"net/http/httputil"
 	"net/url"
+	"os"
 	"strings"
 )
 
 type proxyRouter struct {
-	targetURL *url.URL
-	server    *Server
-	route     *Route
-	*httputil.ReverseProxy
+	targetURL    *url.URL
+	server       *Server
+	route        *Route
+	reverseProxy *httputil.ReverseProxy
+	fileHandler  http.Handler
 }
 
 func initProxyRouter(s *Server, r *Route, targetURL *url.URL) *proxyRouter {
-	proxyRouter := &proxyRouter{targetURL, s, r, &httputil.ReverseProxy{}}
+	proxyRouter := &proxyRouter{targetURL, s, r, nil, nil}
 
-	proxyRouter.Rewrite = rewriteFce(proxyRouter)
-	proxyRouter.ModifyResponse = modifyResponseFce(proxyRouter)
+	if r.Target != "" {
+		proxyRouter.reverseProxy = &httputil.ReverseProxy{}
+		proxyRouter.reverseProxy.Rewrite = rewriteFce(proxyRouter)
+		proxyRouter.reverseProxy.ModifyResponse = modifyResponseFce(proxyRouter)
+	} else if r.Root != "" {
+		// TODO: do not standard http.FileServer
+		proxyRouter.fileHandler = http.StripPrefix(r.Path, http.FileServer(http.FS(os.DirFS(r.Root))))
+	}
 
 	return proxyRouter
 }
