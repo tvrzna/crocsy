@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"html"
 	"io"
 	"log"
 	"mime"
@@ -102,8 +103,8 @@ func (fs *FileServer) serverDir(path, filePath string, w http.ResponseWriter) {
 		return entries[i].Name() < entries[j].Name()
 	})
 
-	w.Header().Set("content-type", "text/html")
-	w.Write([]byte("<!doctype html!><html><body><h1>" + path + "</h1><table><tr><th>Name</th><th>Last Modified</th><th>Size</th></tr>"))
+	w.Header().Set("content-type", "text/html; charset=utf-8")
+	w.Write([]byte("<!doctype html!><html><body><h1>" + html.EscapeString(path) + "</h1><table><tr><th>Name</th><th>Last Modified</th><th>Size</th></tr>"))
 	if path != "/" {
 		w.Write([]byte(fmt.Sprintf("<tr><td colspan=\"3\"><a href=\"%s\">../</a></td></tr>", "../")))
 	}
@@ -114,7 +115,7 @@ func (fs *FileServer) serverDir(path, filePath string, w http.ResponseWriter) {
 			continue
 		}
 		lastModified := fi.ModTime().Format(("2006-01-02 15:04:05"))
-		size := "&lt;DIR&gt;"
+		size := "<DIR>"
 		link := filepath.Join(fs.r.Path, path, entry.Name())
 
 		if entry.IsDir() {
@@ -125,7 +126,7 @@ func (fs *FileServer) serverDir(path, filePath string, w http.ResponseWriter) {
 			size = tidySizePrefix(float64(fi.Size()), 0)
 		}
 
-		w.Write([]byte(fmt.Sprintf("<tr><td><a href=\"%s\">%s</a></td><td>%s</td><td>%s</td></tr>", link, entry.Name(), lastModified, size)))
+		w.Write([]byte(fmt.Sprintf("<tr><td><a href=\"%s\">%s</a></td><td>%s</td><td>%s</td></tr>", html.EscapeString(link), html.EscapeString(entry.Name()), html.EscapeString(lastModified), html.EscapeString(size))))
 	}
 	w.Write([]byte("</table></body></html>"))
 }
