@@ -68,33 +68,38 @@ func (fs *FileServer) serverDir(path, filePath string, w http.ResponseWriter) {
 		return
 	}
 
-	if fs.r.Autoindex {
-		indexName := defaultIndex
-		if fs.r.Index != "" {
-			indexName = fs.r.Index
-		}
-		indexName = strings.ToLower(indexName)
+	indexName := defaultIndex
+	if fs.r.Index != "" {
+		indexName = fs.r.Index
+	}
+	indexName = strings.ToLower(indexName)
+	indexNames := strings.Split(indexName, " ")
 
-		indexNames := strings.Split(indexName, " ")
-
-		for _, entry := range entries {
-			if !entry.IsDir() {
-				entryName := strings.ToLower(entry.Name())
-				for _, in := range indexNames {
-					if entryName == in {
-						fi, err := entry.Info()
-						if err != nil {
-							log.Print(err)
-							continue
-						}
-						fs.serverFile(filepath.Join(filePath, entry.Name()), fi.Size(), w)
-						return
+	for _, entry := range entries {
+		if !entry.IsDir() {
+			entryName := strings.ToLower(entry.Name())
+			for _, in := range indexNames {
+				if entryName == in {
+					fi, err := entry.Info()
+					if err != nil {
+						log.Print(err)
+						continue
 					}
+					fs.serverFile(filepath.Join(filePath, entry.Name()), fi.Size(), w)
+					return
 				}
 			}
 		}
 	}
 
+	if fs.r.Autoindex {
+		fs.indexDir(entries, w, path)
+	} else {
+		w.WriteHeader(http.StatusNotFound)
+	}
+}
+
+func (fs *FileServer) indexDir(entries []os.DirEntry, w http.ResponseWriter, path string) {
 	sort.Slice(entries, func(i, j int) bool {
 		if entries[i].IsDir() != entries[j].IsDir() {
 			return entries[i].IsDir()
