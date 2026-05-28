@@ -4,5 +4,5 @@ go 1.25.5
 
 require (
 	github.com/tvrzna/go-utils/args v0.0.3
-	gopkg.in/yaml.v2 v2.4.0
+	go.yaml.in/yaml/v3 v3.0.4
 )

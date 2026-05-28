@@ -5,7 +5,7 @@ import (
 	"os"
 
 	"github.com/tvrzna/go-utils/args"
-	"gopkg.in/yaml.v2"
+	"go.yaml.in/yaml/v3"
 )
 
 type Config struct {
