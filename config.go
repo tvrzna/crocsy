@@ -13,30 +13,31 @@ type Config struct {
 }
 
 type Server struct {
-	Listen string `yaml:"listen"`
+	Listen string `yaml:"listen,omitempty"`
 	TLS    struct {
-		CertFile string `yaml:"cert_file"`
-		KeyFile  string `yaml:"key_file"`
-	} `yaml:"tls"`
-	Routes     []Route           `yaml:"route"`
-	Redirect   string            `yaml:"redirect"`
-	SetHeaders map[string]string `yaml:"set-headers"`
+		CertFile string `yaml:"cert_file,omitempty"`
+		KeyFile  string `yaml:"key_file,omitempty"`
+	} `yaml:"tls,omitempty"`
+	Routes     []Route           `yaml:"route,omitempty"`
+	Redirect   string            `yaml:"redirect,omitempty"`
+	SetHeaders map[string]string `yaml:"set-headers,omitempty"`
 }
 
 type Route struct {
-	Host            string            `yaml:"host"`
-	Path            string            `yaml:"path"`
-	Target          string            `yaml:"target"`
-	Root            string            `yaml:"root"`
-	Autoindex       bool              `yaml:"autoindex"`
-	Index           string            `yaml:"index"`
-	SetHeaders      map[string]string `yaml:"set-headers"`
-	ProxySetHeaders map[string]string `yaml:"proxy-set-headers"`
+	Host            string            `yaml:"host,omitempty"`
+	Path            string            `yaml:"path,omitempty"`
+	Target          string            `yaml:"target,omitempty"`
+	Root            string            `yaml:"root,omitempty"`
+	Autoindex       bool              `yaml:"autoindex,omitempty"`
+	Index           string            `yaml:"index,omitempty"`
+	SetHeaders      map[string]string `yaml:"set-headers,omitempty"`
+	ProxySetHeaders map[string]string `yaml:"proxy-set-headers,omitempty"`
 }
 
 var buildVersion string
 
 func InitConfig(arg []string) (*Config, error) {
+	printConfig := false
 	configPath := "crocsy.yaml"
 	args.ParseArgs(arg, func(arg, value string) {
 		switch arg {
@@ -47,7 +48,10 @@ func InitConfig(arg []string) (*Config, error) {
 			os.Exit(0)
 		case "-c", "--config":
 			configPath = value
+		case "-C", "--print-config":
+			printConfig = true
 		}
+
 	})
 
 	data, err := os.ReadFile(configPath)
@@ -60,6 +64,15 @@ func InitConfig(arg []string) (*Config, error) {
 		return nil, err
 	}
 
+	if printConfig {
+		data, err := yaml.Marshal(c)
+		if err != nil {
+			return nil, err
+		}
+		fmt.Print(string(data))
+		os.Exit(0)
+	}
+
 	return &c, nil
 }
 
@@ -69,6 +82,7 @@ Options:
 	-h, --help		print this help
 	-v, --version		print version
 	-c, --config		set path to config file
+	-C, --print-config	prints currently loaded configuration
 `)
 	os.Exit(0)
 }

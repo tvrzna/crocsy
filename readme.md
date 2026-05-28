@@ -58,6 +58,7 @@ Options:
         -h, --help              print this help
         -v, --version           print version
         -c, --config            set path to config file
+        -C, --print-config      prints currently loaded configuration
 ```
 
 Example:
