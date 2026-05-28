@@ -44,7 +44,10 @@ func (fs *FileServer) Serve(w http.ResponseWriter, req *http.Request) {
 		path = "/"
 	}
 
-	filePath := filepath.Join(fs.r.Root, path)
+	filePath, isSecured := fs.getSecuredFilePath(path, w)
+	if !isSecured {
+		return
+	}
 
 	if fi, err := os.Stat(filePath); err == nil {
 		if fi.IsDir() {
@@ -58,6 +61,28 @@ func (fs *FileServer) Serve(w http.ResponseWriter, req *http.Request) {
 	} else {
 		w.WriteHeader(http.StatusNotFound)
 	}
+}
+
+func (fs *FileServer) getSecuredFilePath(path string, w http.ResponseWriter) (string, bool) {
+	rootAbs, err := filepath.Abs(fs.r.Root)
+	if err != nil {
+		log.Printf("Internal error resolvit root path '%s': %v", fs.r.Root, err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return "", false
+	}
+
+	filePath, err := filepath.Abs(filepath.Join(rootAbs, path))
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		return "", false
+	}
+
+	rel, err := filepath.Rel(rootAbs, filePath)
+	if err != nil || rel == ".." || strings.HasPrefix(rel, ".."+string(filepath.Separator)) {
+		w.WriteHeader(http.StatusNotFound)
+		return "", false
+	}
+	return filePath, true
 }
 
 func (fs *FileServer) serverDir(path, filePath string, w http.ResponseWriter) {

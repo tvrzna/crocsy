@@ -12,7 +12,6 @@ const (
 )
 
 func startServer(s *Server) {
-	// TODO: validate listen
 	mux := http.NewServeMux()
 
 	if s.Redirect != "" {
